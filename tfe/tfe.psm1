@@ -1,4 +1,4 @@
-function New-Tarball
+function NewTarballFile
 {
     [CmdletBinding()]
     [OutputType([Boolean])]
@@ -39,7 +39,7 @@ function New-Tarball
 Function DecodeToken
 {
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 1)][securestring]$Token
+        [Parameter(Mandatory = $true)][securestring]$Token
     )
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Token);
     try
@@ -75,7 +75,7 @@ Function New-TFEConfigVersion
 
     $requestParams = @{
         Uri         = "$TFEBaseURL/api/v2/workspaces/$WorkSpaceID/configuration-versions"
-        Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" } 
+        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
         ContentType = 'application/vnd.api+json'
         Method      = 'Post'
         Body        = $body
@@ -106,13 +106,13 @@ Function Get-TFEWorkspace
     try {
         $GetRequest = @{
             Uri         = "$TFEBaseURL/api/v2/organizations/$Org/workspaces/$WorkSpaceName"
-            Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" } 
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
             ContentType = 'application/vnd.api+json'
             Method      = 'Get'
             ErrorAction = 'stop'
             UseBasicParsing = $true
         }
-        
+
         $Result = (Invoke-RestMethod @GetRequest).data
     }
     catch {
@@ -135,18 +135,18 @@ Function Add-TFEVariable
         [Parameter(Mandatory = $false)][hashtable]$EnvVariables,
         [Parameter(Mandatory = $false)][hashtable]$EnvSecrets
     )
-    
+
     Write-verbose "Getting Existing Variables in Workspace $WorkspaceName"
-    
+
     try {
         $GetVariablesRequest = @{
             Uri         = "$TFEBaseURL/api/v2/vars?filter%5Borganization%5D%5Bname%5D=$Org&filter%5Bworkspace%5D%5Bname%5D=$WorkSpaceName"
-            Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" }
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
             ContentType = 'application/vnd.api+json'
             Method      = 'GET'
             ErrorAction = 'stop'
         }
-    
+
         $VariableResult = (Invoke-RestMethod @GetVariablesRequest).data
         $ExistingVariables = @()
         foreach ($item in $variableResult)
@@ -158,9 +158,9 @@ Function Add-TFEVariable
         Throw
         Exit 1
     }
-    
+
     $SourceVariables = @()
-    
+
     If ($PSBoundParameters.containskey('TFVariables'))
     {
         Foreach ($key in $TFVariables.keys)
@@ -196,7 +196,7 @@ Function Add-TFEVariable
             $SourceVariables += New-Object psobject -Property @{"key" = $key; "value" = $EnvSecrets.$key; "sensitive" = $true; "category" = "env"}
         }
     }
-    
+
     If ($SourceVariables.count -eq 0)
     {
         Throw "No Terraform or Environment variables & secrets have been passed into the function."
@@ -208,14 +208,14 @@ Function Add-TFEVariable
             Write-verbose "key = $($item.key); sensitive = '$($item.sensitive)'; category = '$($item.category)'"
         }
     }
-    
+
     Write-verbose "Comparing Source Variables With Existing Variables"
     $VariableAction = @()
 
-    Compare-Object $SourceVariables $ExistingVariables -Property key, sensitive, category -IncludeEqual | Where-Object {$_.key -ne "CONFIRM_DESTROY"} | ForEach-Object { 
+    Compare-Object $SourceVariables $ExistingVariables -Property key, sensitive, category -IncludeEqual | Where-Object {$_.key -ne "CONFIRM_DESTROY"} | ForEach-Object {
         if ($_.sideindicator -eq "==") {
             $VariableAction += New-Object psobject -Property @{"Variable" = $_; "Action" = "Modify"}
-        } 
+        }
         elseif ($_.sideindicator -eq "<=") {
             $VariableAction += New-Object psobject -Property @{"Variable" = $_; "Action" = "Add"}
         }
@@ -223,15 +223,15 @@ Function Add-TFEVariable
             $VariableAction += New-Object psobject -Property @{"Variable" = $_; "Action" = "Remove"}
         }
     }
-    
+
     Write-verbose "Updating Variables"
     if ($VariableAction.action -contains "add") {
         $Workspace = Get-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $WorkspaceName -Token $Token
-        $WorkspaceID = $Workspace.Id   
+        $WorkspaceID = $Workspace.Id
     }
-    
+
     foreach ($item in $VariableAction) {
-        
+
         try {
             if ($item.action -ieq "add") {
                 write-verbose "Adding variable $($item.variable.key)"
@@ -256,25 +256,25 @@ Function Add-TFEVariable
                             }
                         }
                     } | ConvertTo-Json -Depth 5
-    
+
                     $AddRequest = @{
                         Uri         = "$TFEBaseURL/api/v2/vars"
-                        Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" } 
+                        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
                         ContentType = 'application/vnd.api+json'
                         Method      = 'Post'
                         Body        = $body
                         ErrorAction = 'stop'
                     }
-                    
+
                     (Invoke-RestMethod @AddRequest).data | out-null
                 }
                 catch {
                     Throw
                     Exit 1
-                }    
+                }
             } elseif ($item.action -ieq "modify") {
                 write-verbose "Modifying $($item.variable.key)"
-                
+
                 try {
                     $body = @{
                         "data" = @{
@@ -289,24 +289,24 @@ Function Add-TFEVariable
                             }
                         }
                     } | ConvertTo-Json
-        
+
                     $PatchRequest = @{
                         Uri         = "$TFEBaseURL/api/v2/vars/$($VariableResult | Where-Object {$_.attributes.key -eq $item.variable.key -and $_.attributes.category -ieq $item.Variable.category -and $_.attributes.sensitive -eq $item.variable.sensitive} |Select-Object -exp id)"
-                        Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" }
+                        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
                         ContentType = 'application/vnd.api+json'
                         Method      = 'Patch'
                         Body        = $body
                         ErrorAction = 'stop'
                     }
                     (Invoke-RestMethod @PatchRequest).data | out-null
-                    
+
                 }
                 catch {
                     throw
                     Exit 1
                 }
             }
-    
+
         }
         catch {
             throw
@@ -330,16 +330,16 @@ Function Remove-TFEVariable
         [Parameter(Mandatory = $false)][hashtable]$EnvSecrets
     )
     Write-verbose "Getting Existing Variables in Workspace $WorkspaceName"
-    
+
     try {
         $GetVariablesRequest = @{
             Uri         = "$TFEBaseURL/api/v2/vars?filter%5Borganization%5D%5Bname%5D=$Org&filter%5Bworkspace%5D%5Bname%5D=$WorkSpaceName"
-            Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" }
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
             ContentType = 'application/vnd.api+json'
             Method      = 'GET'
             ErrorAction = 'stop'
         }
-    
+
         $VariableResult = (Invoke-RestMethod @GetVariablesRequest).data
         $ExistingVariables = @()
         foreach ($item in $variableResult)
@@ -351,9 +351,9 @@ Function Remove-TFEVariable
         Throw
         Exit 1
     }
-    
+
     $SourceVariables = @()
- 
+
     If ($PSBoundParameters.containskey('TFVariables'))
     {
         Foreach ($key in $TFVariables.keys)
@@ -389,7 +389,7 @@ Function Remove-TFEVariable
             $SourceVariables += New-Object psobject -Property @{"key" = $key; "value" = $EnvSecrets.$key; "sensitive" = $true; "category" = "env"}
         }
     }
-    
+
     If ($SourceVariables.count -eq 0)
     {
         Throw "No Terraform or Environment variables & secrets have been passed into the function."
@@ -401,11 +401,11 @@ Function Remove-TFEVariable
             Write-verbose "key = $($item.key); sensitive = '$($item.sensitive)'; category = '$($item.category)'"
         }
     }
-    
+
     Write-verbose "Comparing Source Variables With Existing Variables"
     $VariableAction = @()
 
-    Compare-Object $SourceVariables $ExistingVariables -Property key, sensitive, category -IncludeEqual | Where-Object {$_.key -ne "CONFIRM_DESTROY"} | ForEach-Object { 
+    Compare-Object $SourceVariables $ExistingVariables -Property key, sensitive, category -IncludeEqual | Where-Object {$_.key -ne "CONFIRM_DESTROY"} | ForEach-Object {
         if ($_.sideindicator -eq "==") {
             $VariableAction += New-Object psobject -Property @{"Variable" = $_; "Action" = "Remove"}
         }
@@ -416,15 +416,15 @@ Function Remove-TFEVariable
     } else {
         Write-Verbose "No variables to remove"
     }
-    
-    
+
+
     foreach ($item in $VariableAction) {
         write-verbose "Removing $($item.variable.key)"
-        
-        try {    
+
+        try {
             $DeleteRequest = @{
                 Uri         = "$TFEBaseURL/api/v2/vars/$($VariableResult | Where-Object {$_.attributes.key -eq $item.variable.key -and $_.attributes.category -ieq $item.Variable.category -and $_.attributes.sensitive -eq $item.variable.sensitive} |Select-Object -exp id)"
-                Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" }
+                Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
                 ContentType = 'application/vnd.api+json'
                 Method      = 'Delete'
                 ErrorAction = 'stop'
@@ -453,18 +453,18 @@ Function Add-TFEContent
     Write-Verbose "Get TFE workspace"
     $workspace = Get-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $WorkspaceName -Token $Token
     $workspaceId = $workspace.Id
-    
+
     Write-Verbose "Creating new configuration version"
     $newConfig = New-TFEConfigVersion -TFEBaseURL $TFEBaseURL -WorkspaceId $workspaceId -Token $Token
     $uploadUrl = $newConfig.attributes.'upload-url'
     $newConfigId = $newConfig.id
     $tarballPath = Join-path $env:temp "$newConfigId.tar.gz"
     #process content
-    
+
     If (Test-Path $ContentPath -PathType Container)
     {
         Write-Verbose "Adding directory '$ContentPath' to '$tarballPath'"
-        New-Tarball -source $ContentPath -output $tarballPath
+        NewTarballFile -source $ContentPath -output $tarballPath
     } else {
         $UploadSource = get-item $ContentPath
         if ($UploadSource.name -imatch '.\.tar\.gz$')
@@ -472,7 +472,7 @@ Function Add-TFEContent
             Write-Verbose "'$ContentPath' is already a tarball. No need to create new tar.gz file"
         } else {
             Write-Verbose "Adding file '$ContentPath' to '$tarballPath'"
-            New-Tarball -source $ContentPath -output $tarballPath
+            NewTarballFile -source $ContentPath -output $tarballPath
         }
 
     }
@@ -491,6 +491,9 @@ Function Add-TFEContent
         Throw
         Exit 1
     }
+    #Delete tarball from temp directory
+    Remove-Item -path $tarballPath -Force | Out-Null
+
     if ($request.StatusCode -ge 200 -and $request.statusCode -le 299)
     {
         Write-Verbose "Content uploaded successfully"
@@ -508,14 +511,13 @@ Function Get-TFERunStatus
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
         [Parameter(Mandatory = $true, HelpMessage = "Enter the TFE Run Id.")][string]$RunID,
-        [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace name.")][string]$WorkspaceName,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token,
         [Parameter(Mandatory=$false, HelpMessage = "Wait for the TFE Run to complete.")][Switch]$WaitForCompletion
     )
-        
+
     $GetRequest = @{
         Uri         = "$TFEBaseURL/api/v2/runs/$RunID"
-        Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" } 
+        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
         ContentType = 'application/vnd.api+json'
         Method      = 'Get'
         ErrorAction = 'stop'
@@ -530,7 +532,7 @@ Function Get-TFERunStatus
                 $Result = (Invoke-RestMethod @GetRequest).data
                 $Status = $Result.attributes.status
                 Write-Verbose "Terraform Workspace Run '$RunID' in '$Status' state"
-                Start-Sleep 10 
+                Start-Sleep 10
             }
             while ($Status -in $StatesToWaitFor)
         } else {
@@ -559,8 +561,8 @@ Function New-TFEQueuePlan
 
     Write-Verbose "Get TFE workspace"
     $workspace = Get-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $WorkspaceName -Token $Token
-    $workspaceId = $workspace.Id    
-    #Get Workspace Id
+    $workspaceId = $workspace.Id
+
     $body = @{
         "data" = @{
             "attributes"    = @{
@@ -584,16 +586,16 @@ Function New-TFEQueuePlan
             }
         }
     } | ConvertTo-Json -Depth 5
-    
+
         $PostRequest = @{
             Uri         = "https://$TFEURL/api/v2/runs"
-            Headers     = @{"Authorization" = "Bearer $(DecodeToken $Token)" } 
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
             ContentType = 'application/vnd.api+json'
             Method      = 'Post'
             Body        = $body
             ErrorAction = 'stop'
         }
-    
+
         try {
             Write-verbose "Creating new queue plan for TFE"
             $Result = (Invoke-RestMethod @PostRequest).data
@@ -604,7 +606,7 @@ Function New-TFEQueuePlan
             Exit 1
         }
         $Result
-    
+
 }
 
 #Set TLS version
