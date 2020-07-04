@@ -314,7 +314,7 @@ Function Remove-TFEWorkspace
     )
     begin {
         #Process input
-        
+
         $DeleteRequest = @{
             Uri         = "$TFEBaseURL/api/v2/organizations/$Org/workspaces/$WorkspaceName"
             Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
@@ -328,7 +328,7 @@ Function Remove-TFEWorkspace
             Write-verbose "Delete workspace $Workspace from Organisation $org"
             if ($PSCmdlet.ShouldProcess($WorkspaceName))
             {
-                $Result = Invoke-RestMethod @DeleteRequest
+                Invoke-RestMethod @DeleteRequest
             }
         }
         catch {
