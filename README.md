@@ -9,11 +9,14 @@ The following functions are included in this PowerShell module:
 * **Add-TFEContent**: Add content to a Configuration Version of a Workspace
 * **Get-TFEWorkspace**: Retrieve a workspace
 * **Set-TFEWorkspace**: Set workspace attributes
+* **New-TFEWorkspace**: Create a new workspace
+* **Remove-TFEWorkspace**: Delete a workspace
 * **New-TFEConfigVersion**: Create a new Configuration Version in a workspace
 * **Get-TFEConfigVersion**: Get a Configuration Version for a workspace
 * **Add-TFEVariable**: Add one or more variables to a workspace
 * **Remove-TFEVariable**: Delete one or more variables from a workspace
 * **New-TFEQueuePlan**: Start a new workspace run (queue plan)
+* ***Approve-TFERun**: Approve (apply) a run
 * **Get-TFERunStatus**: Retrieve or monitor workspace run status
 * **New-TFEDestroyPlan**: Create a destroy plan for the workspace
 
@@ -75,8 +78,11 @@ Add-TFEContent -TFEBaseURL $TFEBaseURL -ConfigVersionID $config.id -Token $Token
 #Create Run
 $Run = New-TFEQueuePlan -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -ConfigVersionID $config.id -verbose
 
-#Get Run status
+#Get Run status (when the workspace is set to auto-apply)
 Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
+
+#If the workspace is not configured to auto-apply, Set Get-TFERunStatus to exit when the run status is planned
+Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
 ```
 
 ### Create Destroy Plan & wait for it to complete
@@ -85,7 +91,26 @@ Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCo
 #Create Destroy plan
 $destroy = New-TFEDestroyPlan -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -Verbose -confirm:$false
 
+#Get Run status (when the workspace is set to auto-apply)
+Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
+
+#If the workspace is not configured to auto-apply, Set Get-TFERunStatus to exit when the run status is planned
+Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
+```
+
+### Approve a Run or destroy and wait for it to complete
+
+```powershell
+#Approve Run
+Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -Confirm:$false -Verbose
+
 #Get Run status
+Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
+
+#Approve Destroy
+Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -Confirm:$false -Verbose
+
+#Get Destroy status
 Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
 ```
 
