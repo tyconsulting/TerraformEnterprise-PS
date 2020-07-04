@@ -31,5 +31,16 @@
 *.out
 *.app
 
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# .tfvars files
+*.tfvars
+
 # Test files
 test.ps1
+**/examples/*
