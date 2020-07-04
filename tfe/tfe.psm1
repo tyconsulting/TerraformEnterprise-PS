@@ -201,7 +201,7 @@ Function Set-TFEWorkspace
                 "type" = "workspaces"
                 }
         } | ConvertTo-Json -Depth 5
-        $GetRequest = @{
+        $PatchRequest = @{
             Uri         = "$TFEBaseURL/api/v2/organizations/$Org/workspaces/$WorkSpaceName"
             Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
             ContentType = 'application/vnd.api+json'
@@ -214,7 +214,7 @@ Function Set-TFEWorkspace
         try {
             if ($PSCmdlet.ShouldProcess($WorkspaceName))
             {
-                $Result = (Invoke-RestMethod @GetRequest).data
+                $Result = (Invoke-RestMethod @PatchRequest).data
             }
         }
         catch {
@@ -226,6 +226,119 @@ Function Set-TFEWorkspace
     }
 }
 
+Function New-TFEWorkspace
+{
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+    [OutputType([object])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace name.")][string]$WorkspaceName,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the description of the workspace.")][string]$WorkspaceDescription,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the Terraform version of the workspace.")][string]$TerraformVersion,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the Terraform working Directory of the workspace.")][string]$TerraformWorkingDir,
+        [Parameter(Mandatory = $false, HelpMessage = "Allow automatically apply changes when a Terraform plan is successful.")][boolean]$AutoApply,
+        [Parameter(Mandatory = $false, HelpMessage = "Allow destroy plan.")][boolean]$AllowDestroyPlan,
+        [Parameter(Mandatory = $false, HelpMessage = "Whether to use remote execution mode. When set to false, the workspace will be used for state storage only.")][boolean]$UseRemoteExecution
+    )
+    begin {
+        #Process input
+        $attributes = @{}
+        $attributes.add('name', $WorkspaceName)
+        If ($PSBoundParameters.ContainsKey('WorkspaceDescription'))
+        {
+            $attributes.add('description', $WorkspaceDescription)
+        }
+        If ($PSBoundParameters.ContainsKey('TerraformVersion'))
+        {
+            $attributes.add('terraform-version', $TerraformVersion)
+        }
+        If ($PSBoundParameters.ContainsKey('TerraformWorkingDir'))
+        {
+            $attributes.add('working-directory', $TerraformWorkingDir)
+        }
+        If ($PSBoundParameters.ContainsKey('AutoApply'))
+        {
+            $attributes.add('auto-apply', $AutoApply)
+        }
+        If ($PSBoundParameters.ContainsKey('AllowDestroyPlan'))
+        {
+            $attributes.add('allow-destroy-plan', $AllowDestroyPlan)
+        }
+        If ($PSBoundParameters.ContainsKey('UseRemoteExecution'))
+        {
+            $attributes.add('operations', $UseRemoteExecution)
+        }
+        $body = @{
+            "data" = @{
+                "attributes"    = $attributes
+                "type" = "workspaces"
+                }
+        } | ConvertTo-Json -Depth 5
+        $PostRequest = @{
+            Uri         = "$TFEBaseURL/api/v2/organizations/$Org/workspaces"
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+            ContentType = 'application/vnd.api+json'
+            Method      = 'POST'
+            ErrorAction = 'stop'
+            Body = $body
+            UseBasicParsing = $true
+        }
+    } Process {
+        try {
+            Write-verbose "Creating workspace $Workspace in Organisation $org"
+            if ($PSCmdlet.ShouldProcess($WorkspaceName))
+            {
+                $Result = (Invoke-RestMethod @PostRequest).data
+            }
+        }
+        catch {
+            throw
+            exit 1
+        }
+    } End {
+        $Result
+    }
+}
+
+Function Remove-TFEWorkspace
+{
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [OutputType([boolean])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace name.")][string]$WorkspaceName,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
+    )
+    begin {
+        #Process input
+        
+        $DeleteRequest = @{
+            Uri         = "$TFEBaseURL/api/v2/organizations/$Org/workspaces/$WorkspaceName"
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+            ContentType = 'application/vnd.api+json'
+            Method      = 'DELETE'
+            ErrorAction = 'stop'
+            UseBasicParsing = $true
+        }
+    } Process {
+        try {
+            Write-verbose "Delete workspace $Workspace from Organisation $org"
+            if ($PSCmdlet.ShouldProcess($WorkspaceName))
+            {
+                $Result = Invoke-RestMethod @DeleteRequest
+            }
+        }
+        catch {
+            throw
+            exit 1
+        }
+    } End {
+        $true
+    }
+}
 Function Add-TFEVariable
 {
     [CmdletBinding()]
@@ -642,7 +755,8 @@ Function Get-TFERunStatus
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
         [Parameter(Mandatory = $true, HelpMessage = "Enter the TFE Run Id.")][string]$RunID,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token,
-        [Parameter(Mandatory=$false, HelpMessage = "Wait for the TFE Run to complete.")][Switch]$WaitForCompletion
+        [Parameter(Mandatory=$false, HelpMessage = "Wait for the TFE Run to complete.")][Switch]$WaitForCompletion,
+        [Parameter(Mandatory=$false, HelpMessage = "When waiting for TFE Run to complete, exit when the status is Planned.")][Switch]$StopAtPlanned
     )
 
     $GetRequest = @{
@@ -652,8 +766,11 @@ Function Get-TFERunStatus
         Method      = 'Get'
         ErrorAction = 'stop'
     }
-    $StatesToWaitFor = @("applying", "canceled", "confirmed", "pending", "planned", "planning", "policy_checked", "policy_checking", "policy_override")
-
+    $StatesToWaitFor = @("applying", "canceled", "confirmed", "pending", "planning", "policy_checked", "policy_checking", "policy_override")
+    If (!$StopAtPlanned)
+    {
+        $StatesToWaitFor += 'planned'
+    }
     Write-verbose "Getting run status for Id '$RunID'"
     try {
         if ($WaitForCompletion)
@@ -743,6 +860,45 @@ Function New-TFEQueuePlan
     }
 }
 
+Function Approve-TFERun
+{
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [OutputType([boolean])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the Run ID.")][string]$RunID,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the comment for the queue plan.")][string]$comment = "Appy Run via REST API",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
+    )
+    Begin {
+        $body = @{
+            "comment" = $Comment
+        } | ConvertTo-Json -Depth 5
+        write-verbose "requesty body $body"
+        $PostRequest = @{
+            Uri         = "$TFEBaseURL/api/v2/runs/$RunID/actions/apply"
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+            ContentType = 'application/vnd.api+json'
+            Method      = 'Post'
+            Body        = $body
+            ErrorAction = 'stop'
+        }
+    } Process {
+        try {
+            Write-verbose "Apply Run Id $RunID"
+            if ($PSCmdlet.ShouldProcess($WorkspaceName))
+            {
+                Invoke-RestMethod @PostRequest
+            }
+        }
+        catch {
+            THrow
+            Exit 1
+        }
+    } End {
+        $true
+    }
+}
 Function New-TFEDestroyPlan
 {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
