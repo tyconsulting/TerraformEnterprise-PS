@@ -15,10 +15,13 @@ The following functions are included in this PowerShell module:
 * **Get-TFEConfigVersion**: Get a Configuration Version for a workspace
 * **Add-TFEVariable**: Add one or more variables to a workspace
 * **Remove-TFEVariable**: Delete one or more variables from a workspace
-* **New-TFEQueuePlan**: Start a new workspace run (queue plan)
-* ***Approve-TFERun**: Approve (apply) a run
-* **Get-TFERunStatus**: Retrieve or monitor workspace run status
+* **New-TFERun**: Start a new workspace run (queue plan)
+* **Approve-TFERun**: Approve (apply) a run
+* **Stop-TFERun**: Disgard a run - It  can be used to skip any remaining work on runs that are paused waiting for confirmation or priority. This includes runs in the "pending," "needs confirmation," "policy checked," and "policy override" states.
+* **Get-TFERunDetails**: Retrieve or monitor workspace run details (including status)
 * **New-TFEDestroyPlan**: Create a destroy plan for the workspace
+* **Get-TFEPlan**: Get plan for the run (A plan represents the execution plan of a Run in a Terraform workspace.)
+* **Get-TFEPLanLog**: Download the log from a plan
 
 ## Sample Code
 
@@ -76,13 +79,13 @@ Add-TFEContent -TFEBaseURL $TFEBaseURL -ConfigVersionID $config.id -Token $Token
 
 ```powershell
 #Create Run
-$Run = New-TFEQueuePlan -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -ConfigVersionID $config.id -verbose
+$Run = New-TFERun -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -ConfigVersionID $config.id -verbose
 
 #Get Run status (when the workspace is set to auto-apply)
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
 
-#If the workspace is not configured to auto-apply, Set Get-TFERunStatus to exit when the run status is planned
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
+#If the workspace is not configured to auto-apply, Set Get-TFERunDetails to exit when the run status is planned
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
 ```
 
 ### Create Destroy Plan & wait for it to complete
@@ -92,10 +95,10 @@ Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCo
 $destroy = New-TFEDestroyPlan -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -Verbose -confirm:$false
 
 #Get Run status (when the workspace is set to auto-apply)
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
 
-#If the workspace is not configured to auto-apply, Set Get-TFERunStatus to exit when the run status is planned
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
+#If the workspace is not configured to auto-apply, Set Get-TFERunDetails to exit when the run status is planned
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -StopAtPlanned -Verbose
 ```
 
 ### Approve a Run or destroy and wait for it to complete
@@ -105,13 +108,13 @@ Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitF
 Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -Confirm:$false -Verbose
 
 #Get Run status
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -Verbose
 
 #Approve Destroy
 Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -Confirm:$false -Verbose
 
 #Get Destroy status
-Get-TFERunStatus -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
+Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
 ```
 
 ### Remove secret

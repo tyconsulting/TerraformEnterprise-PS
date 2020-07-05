@@ -362,6 +362,7 @@ Function Add-TFEVariable
             ContentType = 'application/vnd.api+json'
             Method      = 'GET'
             ErrorAction = 'stop'
+            UseBasicParsing = $true
         }
 
         $VariableResult = (Invoke-RestMethod @GetVariablesRequest).data
@@ -481,6 +482,7 @@ Function Add-TFEVariable
                         Method      = 'Post'
                         Body        = $body
                         ErrorAction = 'stop'
+                        UseBasicParsing = $true
                     }
 
                     (Invoke-RestMethod @AddRequest).data | out-null
@@ -555,6 +557,7 @@ Function Remove-TFEVariable
                 ContentType = 'application/vnd.api+json'
                 Method      = 'GET'
                 ErrorAction = 'stop'
+                UseBasicParsing = $true
             }
 
             $VariableResult = (Invoke-RestMethod @GetVariablesRequest).data
@@ -643,6 +646,7 @@ Function Remove-TFEVariable
                         ContentType = 'application/vnd.api+json'
                         Method      = 'Delete'
                         ErrorAction = 'stop'
+                        UseBasicParsing = $true
                     }
                     (Invoke-RestMethod @DeleteRequest).data | out-null
                 }
@@ -676,6 +680,7 @@ Function Get-TFEConfigVersion
         ContentType = 'application/vnd.api+json'
         Method      = 'Get'
         ErrorAction = 'stop'
+        UseBasicParsing = $true
     }
     Write-Verbose "requesting new config via URI '$($requestParams.Uri)'"
     try {
@@ -747,10 +752,10 @@ Function Add-TFEContent
 
 }
 
-Function Get-TFERunStatus
+Function Get-TFERunDetails
 {
     [CmdletBinding()]
-    [OutputType([int])]
+    [OutputType([Object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
         [Parameter(Mandatory = $true, HelpMessage = "Enter the TFE Run Id.")][string]$RunID,
@@ -765,35 +770,118 @@ Function Get-TFERunStatus
         ContentType = 'application/vnd.api+json'
         Method      = 'Get'
         ErrorAction = 'stop'
+        UseBasicParsing = $true
     }
     $StatesToWaitFor = @("applying", "canceled", "confirmed", "pending", "planning", "policy_checked", "policy_checking", "policy_override")
     If (!$StopAtPlanned)
     {
         $StatesToWaitFor += 'planned'
     }
-    Write-verbose "Getting run status for Id '$RunID'"
+    Write-verbose "Getting run details for Id '$RunID'"
     try {
         if ($WaitForCompletion)
         {
+            $bFirstRequest = $true
             do {
-                Start-Sleep 10
-                $Result = (Invoke-RestMethod @GetRequest).data
-                $Status = $Result.attributes.status
+                if (!$bFirstRequest)
+                {
+                    Start-Sleep 10
+                }
+                $Result = Invoke-RestMethod @GetRequest
+                $bFirstRequest = $false
+                $Status = $Result.data.attributes.status
                 Write-Verbose "Terraform Workspace Run '$RunID' in '$Status' state"
             }
             while ($Status -in $StatesToWaitFor)
         } else {
-            $Result = (Invoke-RestMethod @GetRequest).data
-            $Status = $Result.attributes.status
+            $Result = Invoke-RestMethod @GetRequest
+            $Status = $Result.data.attributes.status
         }
     }
     catch {
         Throw
         Exit 1
     }
-    $Status
+    $Result.data
 }
-Function New-TFEQueuePlan
+
+Function Get-TFEPlan
+{
+    [CmdletBinding()]
+    [OutputType([Object])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the TFE Run Id.")][string]$RunID,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
+    )
+
+    $GetRunRequest = @{
+        Uri         = "$TFEBaseURL/api/v2/runs/$RunID"
+        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+        ContentType = 'application/vnd.api+json'
+        Method      = 'Get'
+        ErrorAction = 'stop'
+        UseBasicParsing = $true
+    }
+    try {
+        Write-verbose "Getting run status for Id '$RunID'"
+        $RunResponse = Invoke-RestMethod @GetRunRequest
+        $PlanId = $RunResponse.data.relationships.plan.data.id
+        Write-verbose "Plan Id for the run is $PlanId"
+        $GetPlanRequest = @{
+            Uri         = "$TFEBaseURL/api/v2/plans/$PlanId"
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+            ContentType = 'application/vnd.api+json'
+            Method      = 'Get'
+            ErrorAction = 'stop'
+            UseBasicParsing = $true
+        }
+        $PlanResponse = (Invoke-RestMethod @GetPlanRequest).data
+    }
+    catch {
+        Throw
+        Exit 1
+    }
+    $PlanResponse
+}
+
+Function Get-TFEPlanLog
+{
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the TFE Plan Id.")][string]$PlanId,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
+    )
+
+    $GetPlanRequest = @{
+        Uri         = "$TFEBaseURL/api/v2/plans/$PlanId"
+        Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+        ContentType = 'application/vnd.api+json'
+        Method      = 'Get'
+        ErrorAction = 'stop'
+        UseBasicParsing = $true
+    }
+    try {
+        Write-verbose "Getting details ofr Plan Id $PlanId"
+        $PlanResponse = (Invoke-RestMethod @GetPlanRequest).data
+        $LogReadURI = $PlanResponse.attributes.'log-read-url'
+        $LogRequest = @{
+            Uri = $LogReadURI
+            Method      = 'Get'
+            ErrorAction = 'stop'
+            UseBasicParsing = $true
+        }
+        $LogContent = Invoke-RestMethod @LogRequest
+    }
+    catch {
+        Throw
+        Exit 1
+    }
+    $LogContent
+}
+Function New-TFERun
 {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low')]
     [OutputType([object])]
@@ -842,6 +930,7 @@ Function New-TFEQueuePlan
             Method      = 'Post'
             Body        = $body
             ErrorAction = 'stop'
+            UseBasicParsing = $true
         }
     } Process {
         try {
@@ -882,10 +971,52 @@ Function Approve-TFERun
             Method      = 'Post'
             Body        = $body
             ErrorAction = 'stop'
+            UseBasicParsing = $true
         }
     } Process {
         try {
             Write-verbose "Apply Run Id $RunID"
+            if ($PSCmdlet.ShouldProcess($WorkspaceName))
+            {
+                Invoke-RestMethod @PostRequest
+            }
+        }
+        catch {
+            THrow
+            Exit 1
+        }
+    } End {
+        $true
+    }
+}
+
+Function Stop-TFERun
+{
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [OutputType([boolean])]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the Run ID.")][string]$RunID,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the comment for the queue plan.")][string]$comment = "Discard Run via REST API",
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
+    )
+    Begin {
+        $body = @{
+            "comment" = $Comment
+        } | ConvertTo-Json -Depth 5
+        write-verbose "requesty body $body"
+        $PostRequest = @{
+            Uri         = "$TFEBaseURL/api/v2/runs/$RunID/actions/discard"
+            Headers     = @{"Authorization" = "Bearer $(DecodeToken -Token $Token)" }
+            ContentType = 'application/vnd.api+json'
+            Method      = 'Post'
+            Body        = $body
+            ErrorAction = 'stop'
+            UseBasicParsing = $true
+        }
+    } Process {
+        try {
+            Write-verbose "Disgard Run Id $RunID"
             if ($PSCmdlet.ShouldProcess($WorkspaceName))
             {
                 Invoke-RestMethod @PostRequest
@@ -940,6 +1071,7 @@ Function New-TFEDestroyPlan
             Method      = 'Post'
             Body        = $body
             ErrorAction = 'stop'
+            UseBasicParsing = $true
         }
     } Process {
         try {
