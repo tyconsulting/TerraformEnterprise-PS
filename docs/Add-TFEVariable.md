@@ -8,22 +8,25 @@ schema: 2.0.0
 # Add-TFEVariable
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Add one or more variables to a workspace
 
 ## SYNTAX
 
-```
+```PowerShell
 Add-TFEVariable [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <String> [-Token] <SecureString>
  [[-TFVariables] <Hashtable>] [[-TFSecrets] <Hashtable>] [[-EnvVariables] <Hashtable>]
  [[-EnvSecrets] <Hashtable>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Add one or more variables to a workspace
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
 PS C:\> {{ Add example code here }}
 ```
@@ -33,7 +36,8 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -EnvSecrets
-{{ Fill EnvSecrets Description }}
+
+Sensitive Envrionment Variables in a hashtable
 
 ```yaml
 Type: Hashtable
@@ -48,7 +52,8 @@ Accept wildcard characters: False
 ```
 
 ### -EnvVariables
-{{ Fill EnvVariables Description }}
+
+Non-sensiitve environment variables in a hashtable
 
 ```yaml
 Type: Hashtable
@@ -63,7 +68,8 @@ Accept wildcard characters: False
 ```
 
 ### -Org
-Enter the organization name.
+
+Terraform Enterprise organization name.
 
 ```yaml
 Type: String
@@ -78,8 +84,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+The base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -94,7 +100,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFSecrets
-{{ Fill TFSecrets Description }}
+
+Sensitive Terraform variables in a hashtable
 
 ```yaml
 Type: Hashtable
@@ -109,7 +116,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFVariables
-{{ Fill TFVariables Description }}
+
+Non-sensitive Terraform variables in a hashtable
 
 ```yaml
 Type: Hashtable
@@ -124,7 +132,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The  Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -139,7 +148,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceName
-Enter the workspace name.
+
+The Terraform Enterprise workspace name.
 
 ```yaml
 Type: String
@@ -154,6 +164,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
@@ -163,6 +174,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
 
 ## RELATED LINKS

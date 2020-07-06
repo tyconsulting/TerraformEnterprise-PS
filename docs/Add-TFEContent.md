@@ -8,21 +8,24 @@ schema: 2.0.0
 # Add-TFEContent
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Add content to a Configuration Version of a Workspace
 
 ## SYNTAX
 
-```
+```PowerShell
 Add-TFEContent [[-TFEBaseURL] <String>] [-ConfigVersionID] <String> [-Token] <SecureString>
  [-ContentPath] <FileInfo> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Add content to a Configuration Version of a Workspace
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
 PS C:\> {{ Add example code here }}
 ```
@@ -32,7 +35,8 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -ConfigVersionID
-Enter the TFE configuration version Id.
+
+The TFE configuration version Id.
 
 ```yaml
 Type: String
@@ -47,7 +51,8 @@ Accept wildcard characters: False
 ```
 
 ### -ContentPath
-Enter path to the file or folder to be uploaded.
+
+The path to the file or folder to be uploaded.
 
 ```yaml
 Type: FileInfo
@@ -62,8 +67,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+The base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -78,7 +83,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -93,6 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
