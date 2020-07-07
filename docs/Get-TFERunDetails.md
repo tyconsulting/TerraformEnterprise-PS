@@ -8,31 +8,37 @@ schema: 2.0.0
 # Get-TFERunDetails
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Retrieve or monitor workspace run details (including status)
 
 ## SYNTAX
 
-```
+```PowerShell
 Get-TFERunDetails [[-TFEBaseURL] <String>] [-RunID] <String> [-Token] <SecureString> [-WaitForCompletion]
  [-StopAtPlanned] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Retrieve or monitor workspace run details (including status)
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $RunId -Token $Token -WaitForCompletion -Verbose
 ```
 
-{{ Add example description here }}
+Retrieve or monitor workspace run details (including status). The RunID can be retrieved from the output of New-TFERun function.
 
 ## PARAMETERS
 
 ### -RunID
-Enter the TFE Run Id.
+
+The TFE Run Id.
 
 ```yaml
 Type: String
@@ -47,7 +53,8 @@ Accept wildcard characters: False
 ```
 
 ### -StopAtPlanned
-When waiting for TFE Run to complete, exit when the status is Planned.
+
+When waiting for TFE Run to complete, exit when the status is Planned. This is useful when the Terraform Enterprise workspace is not configured to auto-apply (So the plan will stop at 'Planned' stage).
 
 ```yaml
 Type: SwitchParameter
@@ -62,8 +69,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -78,7 +85,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -93,6 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -WaitForCompletion
+
 Wait for the TFE Run to complete.
 
 ```yaml
@@ -108,6 +117,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

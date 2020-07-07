@@ -6,10 +6,10 @@ PowerShell module for Terraform Enterprise APIs
 
 The following functions are included in this PowerShell module:
 
-* **Add-TFEContent**: Add content to a Configuration Version of a Workspace
-* **Get-TFEWorkspace**: Retrieve a workspace
 * **Set-TFEWorkspace**: Set workspace attributes
 * **New-TFEWorkspace**: Create a new workspace
+* **Add-TFEContent**: Add content to a Configuration Version of a Workspace
+* **Get-TFEWorkspace**: Retrieve a workspace
 * **Remove-TFEWorkspace**: Delete a workspace
 * **New-TFEConfigVersion**: Create a new Configuration Version in a workspace
 * **Get-TFEConfigVersion**: Get a Configuration Version for a workspace
@@ -25,9 +25,10 @@ The following functions are included in this PowerShell module:
 
 ## Sample Code
 
-### Set Variables
+### Common variables
 
 ```powershell
+# Set variables that will used by the following code samples
 $TFEBaseURL = "https://app.terraform.io"
 $Org = "my-org"
 $workspaceName = "myworkspace"
@@ -37,6 +38,10 @@ $TFVariables = @{
     variable-name = "variable-value"
 }
 
+$TFSecrets = @{
+    secret1 = "sec 1"
+    secret2 = "sec 2"
+}
 
 $EnvVariables = @{
     ARM_SUBSCRIPTION_ID = "azure-sub-id"
@@ -49,6 +54,13 @@ $EnvSecrets = @{
 }
 ```
 
+### Create a Workspace
+
+```powershell
+New-TFEWorkspace Set-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -WorkspaceDescription "Tao's lab workspace for TFE API dev work" -TerraformVersion '0.12.28' -AutoApply $false -AllowDestroyPlan $true -Verbose
+
+```
+
 ### Set Workspace
 
 ```powershell
@@ -58,7 +70,7 @@ Set-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName
 ### Add variables
 
 ```powershell
-Add-TFEVariable -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -TFVariables $TFVariables -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets -verbose
+Add-TFEVariable -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -TFVariables $TFVariables -TFSecrets $TFSecrets -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets
 ```
 
 ### Create new configuration version
@@ -117,8 +129,30 @@ Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -Confirm
 Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $destroy.id -Token $Token -WaitForCompletion -Verbose
 ```
 
+### Get Logs for a plan
+
+```powershell
+$RunDetails = Get-TFERunDetails -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -WaitForCompletion -stopAtPlanned -Verbose
+$Plan = Get-TFEPlan -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token
+$Log = Get-TFEPlanLog -TFEBaseURL $TFEBaseURL -PlanId $Plan.id -Token $Token
+Write-Output $Log
+```
+
+### Discard Run
+
+```PowerShell
+Stop-TFERun -TFEBaseURL $TFEBaseURL -RunID $Run.id -Token $Token -confirm:$false
+```
+
+
 ### Remove secret
 
 ```powershell
 Remove-TFEVariable -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -EnvSecrets @('ARM_CLIENT_SECRET') -verbose
+```
+
+### Delete the workspace
+
+```powershell
+Remove-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -confirm:$false -verbose
 ```

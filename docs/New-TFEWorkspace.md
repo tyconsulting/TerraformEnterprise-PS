@@ -8,11 +8,12 @@ schema: 2.0.0
 # New-TFEWorkspace
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Create a new Terraform Enterprise workspace.
 
 ## SYNTAX
 
-```
+```PowerShell
 New-TFEWorkspace [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <String> [-Token] <SecureString>
  [[-WorkspaceDescription] <String>] [[-TerraformVersion] <String>] [[-TerraformWorkingDir] <String>]
  [[-AutoApply] <Boolean>] [[-AllowDestroyPlan] <Boolean>] [[-UseRemoteExecution] <Boolean>] [-WhatIf]
@@ -20,13 +21,20 @@ New-TFEWorkspace [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Create a new Terraform Enterprise workspace.
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Org = "tfe-organization-name"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> $newworkspaceName = 'tao-lab'
+PS C:\> New-TFEWorkspace Set-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $newworkspaceName -Token $Token -WorkspaceDescription "Tao's lab workspace for TFE API dev work" -TerraformVersion '0.12.28' -AutoApply $false -AllowDestroyPlan $true -Verbose
+
 ```
 
 {{ Add example description here }}
@@ -34,6 +42,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AllowDestroyPlan
+
 Allow destroy plan.
 
 ```yaml
@@ -49,6 +58,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutoApply
+
 Allow automatically apply changes when a Terraform plan is successful.
 
 ```yaml
@@ -64,6 +74,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -79,7 +90,8 @@ Accept wildcard characters: False
 ```
 
 ### -Org
-Enter the organization name.
+
+The organization name.
 
 ```yaml
 Type: String
@@ -94,8 +106,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -110,7 +122,8 @@ Accept wildcard characters: False
 ```
 
 ### -TerraformVersion
-Enter the Terraform version of the workspace.
+
+The Terraform version of the workspace.
 
 ```yaml
 Type: String
@@ -125,7 +138,8 @@ Accept wildcard characters: False
 ```
 
 ### -TerraformWorkingDir
-Enter the Terraform working Directory of the workspace.
+
+The Terraform working Directory of the workspace.
 
 ```yaml
 Type: String
@@ -140,7 +154,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -155,8 +170,8 @@ Accept wildcard characters: False
 ```
 
 ### -UseRemoteExecution
-Whether to use remote execution mode.
-When set to false, the workspace will be used for state storage only.
+
+Whether to use remote execution mode. When set to false, the workspace will be used for state storage only.
 
 ```yaml
 Type: Boolean
@@ -171,6 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
@@ -187,7 +203,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceDescription
-Enter the description of the workspace.
+
+The description of the workspace.
 
 ```yaml
 Type: String
@@ -202,7 +219,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceName
-Enter the workspace name.
+
+The workspace name.
 
 ```yaml
 Type: String
@@ -217,6 +235,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

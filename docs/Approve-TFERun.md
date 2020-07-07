@@ -8,30 +8,36 @@ schema: 2.0.0
 # Approve-TFERun
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Approve (apply) a run
 
 ## SYNTAX
 
-```
+```PowerShell
 Approve-TFERun [[-TFEBaseURL] <String>] [-RunID] <String> [[-comment] <String>] [-Token] <SecureString>
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Approve (apply) a run in a Terraform Enterprise workspace
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> Approve-TFERun -TFEBaseURL $TFEBaseURL -RunID $RunId -Token $Token -Confirm:$false -Verbose
 ```
 
-{{ Add example description here }}
+Approve (apply) a run in a Terraform Enterprise workspace. The RunID can be retrieved from the output of New-TFERun function.
 
 ## PARAMETERS
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -47,7 +53,8 @@ Accept wildcard characters: False
 ```
 
 ### -RunID
-Enter the Run ID.
+
+The Run ID.
 
 ```yaml
 Type: String
@@ -62,8 +69,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+The base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -78,7 +85,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -93,6 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
@@ -109,7 +118,8 @@ Accept wildcard characters: False
 ```
 
 ### -comment
-Enter the comment for the queue plan.
+
+The comment for the queue plan.
 
 ```yaml
 Type: String
@@ -124,6 +134,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

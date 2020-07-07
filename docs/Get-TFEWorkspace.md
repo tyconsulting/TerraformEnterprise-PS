@@ -8,31 +8,39 @@ schema: 2.0.0
 # Get-TFEWorkspace
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Retrieve a Terraform Enterprise workspace.
 
 ## SYNTAX
 
-```
+```PowerShell
 Get-TFEWorkspace [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <String> [-Token] <SecureString>
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Retrieve a Terraform Enterprise workspace.
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Org = "tfe-organization-name"
+PS C:\> $workspaceName = "workspace-name"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> $workspace = Get-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $WorkspaceName -Token $Token
 ```
 
-{{ Add example description here }}
+Retrieve a Terraform Enterprise workspace.
 
 ## PARAMETERS
 
 ### -Org
-Enter the organization name.
+
+The organization name.
 
 ```yaml
 Type: String
@@ -47,8 +55,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -63,7 +71,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -78,7 +87,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceName
-Enter the workspace name.
+
+The workspace name.
 
 ```yaml
 Type: String
@@ -93,6 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

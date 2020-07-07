@@ -59,7 +59,7 @@ Function New-TFEConfigVersion
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
     [OutputType([object])]
     Param(
-        [Parameter(Mandatory = $true, HelpMessage = "Enter the base URL for Terraform Enterprise.")][string]$TFEBaseURL,
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace Name.")][string]$WorkSpaceName,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token
@@ -347,10 +347,10 @@ Function Add-TFEVariable
         [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace name.")][string]$WorkspaceName,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token,
-        [Parameter(Mandatory = $false)][hashtable]$TFVariables,
-        [Parameter(Mandatory = $false)][hashtable]$TFSecrets,
-        [Parameter(Mandatory = $false)][hashtable]$EnvVariables,
-        [Parameter(Mandatory = $false)][hashtable]$EnvSecrets
+        [Parameter(Mandatory = $false, HelpMessage = "Non-sensitive Terraform variables in a hashtable")][hashtable]$TFVariables,
+        [Parameter(Mandatory = $false, HelpMessage = "Sensitive Terraform Variables in a hashtable")][hashtable]$TFSecrets,
+        [Parameter(Mandatory = $false, HelpMessage = "Non-sensitive environment variables in a hashtable")][hashtable]$EnvVariables,
+        [Parameter(Mandatory = $false, HelpMessage = "Sensitive Envrionment Variables in a hashtable")][hashtable]$EnvSecrets
     )
 
     Write-verbose "Getting Existing Variables in Workspace $WorkspaceName"
@@ -543,10 +543,10 @@ Function Remove-TFEVariable
         [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the workspace name.")][string]$WorkspaceName,
         [Parameter(Mandatory = $true, HelpMessage = "Enter the API token as a Secure String.")][securestring]$Token,
-        [Parameter(Mandatory = $false)][string[]]$TFVariables,
-        [Parameter(Mandatory = $false)][string[]]$TFSecrets,
-        [Parameter(Mandatory = $false)][string[]]$EnvVariables,
-        [Parameter(Mandatory = $false)][string[]]$EnvSecrets
+        [Parameter(Mandatory = $false, HelpMessage = "list of names of the non-sensitive Terraform variables to be deleted")][string[]]$TFVariables,
+        [Parameter(Mandatory = $false, HelpMessage = "list of names of the sensitive Terraform variables to be deleted")][string[]]$TFSecrets,
+        [Parameter(Mandatory = $false, HelpMessage = "list of names of the non-sensitive Environment variables to be deleted")][string[]]$EnvVariables,
+        [Parameter(Mandatory = $false, HelpMessage = "list of names of the sensitive Environment variables to be deleted")][string[]]$EnvSecrets
     )
     Begin {
         Write-verbose "Getting Existing Variables in Workspace $WorkspaceName"

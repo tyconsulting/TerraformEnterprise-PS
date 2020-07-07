@@ -28,10 +28,31 @@ Add one or more variables to a workspace
 ### Example 1
 
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFVariables = @{
+            tf_var_1 = "value-1"
+            tf_var_2 = "value-2"
+        }
+PS C:\> $TFSecrets = @{
+            secret1 = "sec 1"
+            secret2 = "sec 2"
+        }
+PS C:\> $EnvVariables = @{
+            ARM_SUBSCRIPTION_ID = "sub-id"
+            ARM_CLIENT_ID = "client-id"
+            ARM_TENANT_ID = "tenant-id"
+        }
+PS C:\> $EnvSecrets = @{
+            ARM_CLIENT_SECRET = "secret-value-1"
+        }
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Org = "tfe-organization-name"
+PS C:\> $workspaceName = "workspace-name"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> Add-TFEVariable -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -TFVariables $TFVariables -TFSecrets $TFSecrets -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets
+
 ```
 
-{{ Add example description here }}
+Add variables to a workspace
 
 ## PARAMETERS
 
@@ -133,7 +154,7 @@ Accept wildcard characters: False
 
 ### -Token
 
-The  Terraform Enterprise API token as a Secure String.
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString

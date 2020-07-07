@@ -8,30 +8,36 @@ schema: 2.0.0
 # Get-TFEPlanLog
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+ Download the log from a plan
 
 ## SYNTAX
 
-```
+```PowerShell
 Get-TFEPlanLog [[-TFEBaseURL] <String>] [-PlanId] <String> [-Token] <SecureString> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Download the log from a plan
 
 ## EXAMPLES
 
 ### Example 1
+
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> $Log = Get-TFEPlanLog -TFEBaseURL $TFEBaseURL -PlanId $PlanId -Token $Token
+PS C:\> Write-Output $Log
 ```
 
-{{ Add example description here }}
+Download and display the log from a plan. The PlanId can be retrieved from the Get-TFEPlan function.
 
 ## PARAMETERS
 
 ### -PlanId
-Enter the TFE Plan Id.
+
+The TFE Plan Id.
 
 ```yaml
 Type: String
@@ -46,8 +52,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -62,7 +68,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -77,6 +84,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

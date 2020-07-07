@@ -27,10 +27,15 @@ Add content to a Configuration Version of a Workspace
 ### Example 1
 
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Org = "tfe-organization-name"
+PS C:\> $workspaceName = "workspace-name"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> $Add-TFEContent -TFEBaseURL $TFEBaseURL -ConfigVersionID $config.id -Token $Token -contentPath "C:\terraform\terraform-code-dir\"
+
 ```
 
-{{ Add example description here }}
+Upload the content in the "C:\terraform\terraform-code-dir\" folder to your Terraform Enterprise workspacce.
 
 ## PARAMETERS
 

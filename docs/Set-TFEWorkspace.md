@@ -8,11 +8,12 @@ schema: 2.0.0
 # Set-TFEWorkspace
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+
+Set attributes of a Terraform Enterprise workspace.
 
 ## SYNTAX
 
-```
+```PowerShell
 Set-TFEWorkspace [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <String> [-Token] <SecureString>
  [[-NewWorkspaceName] <String>] [[-WorkspaceDescription] <String>] [[-TerraformVersion] <String>]
  [[-TerraformWorkingDir] <String>] [[-AutoApply] <Boolean>] [[-AllowDestroyPlan] <Boolean>]
@@ -20,20 +21,26 @@ Set-TFEWorkspace [[-TFEBaseURL] <String>] [-Org] <String> [-WorkspaceName] <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+
+Set attributes of a Terraform Enterprise workspace.
 
 ## EXAMPLES
 
 ### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
+
+```powershellPS C:\> $TFEBaseURL = "https://app.terraform.io"
+PS C:\> $Org = "tfe-organization-name"
+PS C:\> $workspaceName = "workspace-name"
+PS C:\> $Token = ConvertTo-SecureString -String 'your-api-token' -AsPlainText -Force
+PS C:\> Set-TFEWorkspace -TFEBaseURL $TFEBaseURL -Org $Org -WorkspaceName $workspaceName -Token $Token -WorkspaceDescription "Tao's test workspace for TFE API dev work" -TerraformVersion '0.12.28' -AutoApply $false -AllowDestroyPlan $true
 ```
 
-{{ Add example description here }}
+Set the description, Terraform version of a Terraform workspace. Disable auto-apply for the workspace and allow destroy plan for the workspace.
 
 ## PARAMETERS
 
 ### -AllowDestroyPlan
+
 Allow destroy plan.
 
 ```yaml
@@ -49,6 +56,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutoApply
+
 Allow automatically apply changes when a Terraform plan is successful.
 
 ```yaml
@@ -64,6 +72,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -79,7 +88,8 @@ Accept wildcard characters: False
 ```
 
 ### -NewWorkspaceName
-Enter the new name of the workspace.
+
+The new name of the workspace. This is used to rename the workspace.
 
 ```yaml
 Type: String
@@ -94,7 +104,8 @@ Accept wildcard characters: False
 ```
 
 ### -Org
-Enter the organization name.
+
+The organization name.
 
 ```yaml
 Type: String
@@ -109,8 +120,8 @@ Accept wildcard characters: False
 ```
 
 ### -TFEBaseURL
-Enter the base URL for Terraform Enterprise.
-If not specified, the Terraform Cloud URL will be used.
+
+Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.
 
 ```yaml
 Type: String
@@ -125,7 +136,8 @@ Accept wildcard characters: False
 ```
 
 ### -TerraformVersion
-Enter the Terraform version of the workspace.
+
+The Terraform version of the workspace. This can be used to change the Terraform version that the workspace should use.
 
 ```yaml
 Type: String
@@ -140,7 +152,8 @@ Accept wildcard characters: False
 ```
 
 ### -TerraformWorkingDir
-Enter the Terraform working Directory of the workspace.
+
+The Terraform working Directory of the workspace.
 
 ```yaml
 Type: String
@@ -155,7 +168,8 @@ Accept wildcard characters: False
 ```
 
 ### -Token
-Enter the API token as a Secure String.
+
+The Terraform Enterprise API token as a Secure String.
 
 ```yaml
 Type: SecureString
@@ -170,8 +184,8 @@ Accept wildcard characters: False
 ```
 
 ### -UseRemoteExecution
-Whether to use remote execution mode.
-When set to false, the workspace will be used for state storage only.
+
+Whether to use remote execution mode. When set to false, the workspace will be used for state storage only.
 
 ```yaml
 Type: Boolean
@@ -186,8 +200,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -202,7 +216,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceDescription
-Enter the description of the workspace.
+
+The description of the workspace.
 
 ```yaml
 Type: String
@@ -217,7 +232,8 @@ Accept wildcard characters: False
 ```
 
 ### -WorkspaceName
-Enter the workspace name.
+
+The workspace name.
 
 ```yaml
 Type: String
@@ -232,6 +248,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
