@@ -772,7 +772,7 @@ Function Get-TFERunDetails
         ErrorAction = 'stop'
         UseBasicParsing = $true
     }
-    $StatesToWaitFor = @("applying", "canceled", "confirmed", "pending", "planning", "policy_checked", "policy_checking", "policy_override")
+    $StatesToWaitFor = @("applying", "canceled", "confirmed", "pending", "planning", "policy_checked", "policy_checking", "policy_override", "plan_queued")
     If (!$StopAtPlanned)
     {
         $StatesToWaitFor += 'planned'
