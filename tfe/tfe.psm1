@@ -56,7 +56,7 @@ Function DecodeToken
 }
 Function New-TFEConfigVersion
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFEConfigVersion')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $true, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL,
@@ -113,7 +113,7 @@ Function New-TFEConfigVersion
 
 Function Get-TFEWorkspace
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFEWorkspace')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -143,7 +143,7 @@ Function Get-TFEWorkspace
 
 Function Set-TFEWorkspace
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Set-TFEWorkspace')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -228,7 +228,7 @@ Function Set-TFEWorkspace
 
 Function New-TFEWorkspace
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/New-TFEWorkspace')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -304,7 +304,7 @@ Function New-TFEWorkspace
 
 Function Remove-TFEWorkspace
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Remove-TFEWorkspace')]
     [OutputType([boolean])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -341,7 +341,7 @@ Function Remove-TFEWorkspace
 }
 Function Add-TFEVariable
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Add-TFEVariable')]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
         [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
@@ -537,7 +537,7 @@ Function Add-TFEVariable
 
 Function Remove-TFEVariable
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Remove-TFEVariable')]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
         [Parameter(Mandatory = $true, HelpMessage = "Enter the organization name.")][string]$Org,
@@ -663,7 +663,7 @@ Function Remove-TFEVariable
 
 Function Get-TFEConfigVersion
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFEConfigVersion')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $true, HelpMessage = "Enter the base URL for Terraform Enterprise.")][string]$TFEBaseURL,
@@ -693,7 +693,7 @@ Function Get-TFEConfigVersion
 }
 Function Add-TFEContent
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Add-TFEContent')]
     [OutputType([bool])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -754,7 +754,7 @@ Function Add-TFEContent
 
 Function Get-TFERunDetails
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFERunDetails')]
     [OutputType([Object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -807,7 +807,7 @@ Function Get-TFERunDetails
 
 Function Get-TFEPlan
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFEPlan')]
     [OutputType([Object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -847,7 +847,7 @@ Function Get-TFEPlan
 
 Function Get-TFEPlanLog
 {
-    [CmdletBinding()]
+    [CmdletBinding(HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Get-TFEPlanLog')]
     [OutputType([string])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -883,7 +883,7 @@ Function Get-TFEPlanLog
 }
 Function New-TFERun
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/New-TFERun')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -951,7 +951,7 @@ Function New-TFERun
 
 Function Approve-TFERun
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Approve-TFERun')]
     [OutputType([boolean])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -992,7 +992,7 @@ Function Approve-TFERun
 
 Function Stop-TFERun
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/Stop-TFERun')]
     [OutputType([boolean])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
@@ -1032,7 +1032,7 @@ Function Stop-TFERun
 }
 Function New-TFEDestroyPlan
 {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High', HelpUri='https://github.com/tyconsulting/TerraformEnterprise-PS/wiki/New-TFEDestroyPlan')]
     [OutputType([object])]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the base URL for Terraform Enterprise. If not specified, the Terraform Cloud URL will be used.")][string]$TFEBaseURL = "https://app.terraform.io",
