@@ -26,7 +26,7 @@ The following functions are included in this PowerShell module:
 ## Folder Structure
 
 * [**tfe**](./tfe): Contains the code for the tfe PowerShell module
-* [**azure-pipelines-example](./azure-pipelines.example): Contains a sample pipeline to deploy an compiled C# Azure Function app end-to-end.
+* [**azure-pipelines-example**](./azure-pipelines-example): Contains a sample pipeline to deploy an compiled C# Azure Function app end-to-end.
 
 ## Sample Code
 
