@@ -1,0 +1,377 @@
+name: $(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - 'README.md'
+    include:
+      - 'tf/*'
+      - 'demo_function/*'
+      - 'scripts/*'
+pr:
+  branches:
+    include:
+      - master
+      - feature/*
+  paths:
+    exclude:
+    - 'README.md'
+    include:
+      - 'tf/*'
+      - 'demo_function/*'
+      - 'scripts/*'
+stages:
+- stage: test_and_build
+  displayName: 'Test and Build'
+  variables:
+  - group: az function workspace - lab
+  - group: az function variables - lab
+  jobs:
+  - job: security_scan
+    displayName: Security Scan
+    pool:
+      vmImage: windows-latest
+    steps:
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-antimalware.AntiMalware@3
+      displayName: 'AntiMalware Scan'
+      inputs:
+        FileDirPath: '$(Build.SourcesDirectory)'
+        EnableServices: true
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-credscan.CredScan@2
+      displayName: 'Run Credential Scanner'
+      inputs:
+        outputFormat: csv
+        scanFolder: '$(Build.SourcesDirectory)'
+        verboseOutput: true
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+      displayName: 'Publish Security Analysis Logs'
+      condition: succeededOrFailed()
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-report.SdtReport@1
+      displayName: 'Create Security Analysis Report'
+      inputs:
+        AllTools: true
+      condition: succeededOrFailed()
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-postanalysis.PostAnalysis@1
+      displayName: 'Post Analysis'
+      inputs:
+        AllTools: true
+      condition: succeededOrFailed()
+  - job: lint_tests
+    displayName: Lint Tests
+    dependsOn: security_scan
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: |
+        docker pull github/super-linter:latest
+        docker run -e RUN_LOCAL=true -v $(System.DefaultWorkingDirectory):/tmp/lint github/super-linter
+      displayName: 'Code Scan using GitHub Super-Linter'
+  - job: Terraform_Template_Validation
+    displayName: Terraform Template Validation
+    dependsOn: lint_tests
+    pool:
+      vmImage: windows-latest
+    steps:
+    - powershell: |
+        install-module tfe -repository PSGallery -scope CurrentUser -force
+      displayName: 'Install tfe PowerShell module'
+    - task: PowerShell@2
+      displayName: 'Create TFE Workspace'
+      inputs:
+        targetType: filePath
+        filePath: '$(Build.SourcesDirectory)/scripts/createTFEWorkspace.ps1'
+        arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -TerraformVersion $(TerraformVersion) -AutoApply $(AutoApply) -AllowDestroyPlan $(AllowDestroyPlan) -Token $(TFEToken)'
+    - powershell: |
+        $TFVariables = @{
+        resource_group_name = "$(resourceGroupName)"
+        location = "$(location)"
+        storage_account_name = "$(storageAccountName)"
+        app_service_plan_name = "$(appServicePlanName)"
+        app_service_plan_sku = "$(appServicePlanSku)"
+        app_service_plan_size = "$(appServicePlanSize)"
+        function_app_name = "$(functionAppName)"
+        }
+        $EnvVariables = @{
+        ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+        ARM_CLIENT_ID = "$(ARM_CLIENT_ID)"
+        ARM_TENANT_ID = "$(ARM_TENANT_ID)"
+        }
+        $EnvSecrets = @{
+        ARM_CLIENT_SECRET = "$(ARM_CLIENT_SECRET)"
+        }
+        $secToken = new-object securestring
+        foreach ($char in [char[]]'$(TFEToken)')
+        { $secToken.AppendChar($char) }
+        $secToken.MakeReadOnly()
+        Add-TFEVariable -TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkspaceName $(workspaceName) -Token $secToken -TFVariables $TFVariables -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets
+      displayName: 'Add variables to TFE'
+    - powershell: |
+        $secToken = new-object securestring
+        foreach ($char in [char[]]'$(TFEToken)')
+        { $secToken.AppendChar($char) }
+        $secToken.MakeReadOnly()
+        $Config = New-TFEConfigVersion -TFEBaseURL '$(TFEBaseURL)' -Org '$(Org)' -WorkspaceName '$(workspaceName)' -Token $secToken
+        Write-Output ("##vso[task.setvariable variable=ConfigId]$($Config.id)")
+      displayName: 'Create new configuration version'
+    - powershell: |
+        $secToken = new-object securestring
+        foreach ($char in [char[]]'$(TFEToken)')
+        { $secToken.AppendChar($char) }
+        $secToken.MakeReadOnly()
+        $ContentPath = "$(Build.SourcesDirectory)/tf/azfunction"
+        Write-Output "Uploading '$ContentPath' to TFE"
+        Add-TFEContent -TFEBaseURL '$(TFEBaseURL)' -ConfigVersionID '$(ConfigId)' -Token $secToken -contentPath $ContentPath
+      displayName: 'Upload Code to Terraform Workspace'
+    - task: PowerShell@2
+      inputs:
+        targetType: filePath
+        filePath: '$(Build.SourcesDirectory)/scripts/createQueuePlan.ps1'
+        arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -ConfigVersionID $(ConfigId) -Token $(TFEToken) -CancelAfterPlan True'
+      displayName: 'Create Queue Plan'
+    - powershell: |
+        $secToken = new-object securestring
+        foreach ($char in [char[]]'$(TFEToken)')
+        { $secToken.AppendChar($char) }
+        $secToken.MakeReadOnly()
+        Write-Output "Remove TF Environment variable 'ARM_CLIENT_SECRET'"
+        Remove-TFEVariable -TFEBaseURL '$(TFEBaseURL)' -Org $(Org) -WorkspaceName $(WorkSpaceName) -Token $secToken -EnvSecrets 'ARM_CLIENT_SECRET'
+      displayName: 'Delete Secrets from TFE'
+  - job: build_function_app
+    displayName: Build Function App
+    pool:
+      vmImage: windows-latest
+    dependsOn: Terraform_Template_Validation
+    steps:
+      - task: NuGetToolInstaller@0
+        displayName: 'Use NuGet 4.4.0'
+        inputs:
+          versionSpec: 4.4.0
+          checkLatest: true
+      - task: NuGetCommand@2
+        displayName: 'NuGet restore'
+        inputs:
+          command: 'restore'
+          restoreSolution: '**.*proj'
+      - task: DotNetCoreCLI@2
+        displayName: 'dotnet restore'
+        inputs:
+          command: restore
+          projects: '**/*.csproj'
+      - task: VSBuild@1
+        displayName: 'Build solution'
+        inputs:
+          solution: '**.*proj'
+          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactstagingdirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+          platform: '$(BuildPlatform)'
+          configuration: '$(BuildConfiguration)'
+          msbuildArchitecture: x64
+          createLogFile: true
+      - task: VSTest@2
+        displayName: 'Test Assemblies'
+        inputs:
+          testAssemblyVer2: |
+            **\$(BuildConfiguration)\*test*.dll
+            !**\obj\**
+          platform: '$(BuildPlatform)'
+          configuration: '$(BuildConfiguration)'
+      - task: PublishSymbols@1
+        displayName: 'Publish symbols path'
+        inputs:
+          SearchPattern: '**\bin\**\*.pdb'
+        continueOnError: true
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Artifact'
+        inputs:
+          PathtoPublish: '$(build.artifactstagingdirectory)'
+          ArtifactName: 'function'
+  - job: Publish_Pattern
+    displayName: Publish Pattern
+    pool:
+      vmImage: ubuntu-latest
+    dependsOn: build_function_app
+    steps:
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Terraform Artifact'
+      inputs:
+        artifactName: 'tfe'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+- stage: lab_deploy
+  displayName: 'Lab Stage'
+  jobs:
+    - deployment: lab_deploy
+      variables:
+      - group: az function workspace - lab
+      - group: az function variables - lab
+      displayName: 'Deploy to Lab'
+      pool:
+        vmImage: windows-latest
+        timeoutInMinutes: 120
+      environment: 'lab'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - powershell: |
+                  install-module tfe -repository PSGallery -scope CurrentUser -force
+                displayName: 'Install tfe PowerShell module'
+              - task: PowerShell@2
+                displayName: 'Create TFE Workspace'
+                inputs:
+                  targetType: filePath
+                  filePath: '$(Agent.BuildDirectory)/tfe/scripts/createTFEWorkspace.ps1'
+                  arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -TerraformVersion $(TerraformVersion) -AutoApply $(AutoApply) -AllowDestroyPlan $(AllowDestroyPlan) -Token $(TFEToken)'
+              - powershell: |
+                  $TFVariables = @{
+                  resource_group_name = "$(resourceGroupName)"
+                  location = "$(location)"
+                  storage_account_name = "$(storageAccountName)"
+                  app_service_plan_name = "$(appServicePlanName)"
+                  app_service_plan_sku = "$(appServicePlanSku)"
+                  app_service_plan_size = "$(appServicePlanSize)"
+                  function_app_name = "$(functionAppName)"
+                  }
+                  $EnvVariables = @{
+                  ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+                  ARM_CLIENT_ID = "$(ARM_CLIENT_ID)"
+                  ARM_TENANT_ID = "$(ARM_TENANT_ID)"
+                  }
+                  $EnvSecrets = @{
+                  ARM_CLIENT_SECRET = "$(ARM_CLIENT_SECRET)"
+                  }
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Add-TFEVariable -TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkspaceName $(workspaceName) -Token $secToken -TFVariables $TFVariables -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets
+                displayName: 'Add variables to TFE'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  $Config = New-TFEConfigVersion -TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkspaceName $(workspaceName) -Token $secToken
+                  Write-Output ("##vso[task.setvariable variable=ConfigId]$($Config.id)")
+                displayName: 'Create new configuration version'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Add-TFEContent -TFEBaseURL $(TFEBaseURL) -ConfigVersionID $(ConfigId) -Token $secToken -contentPath "$(Agent.BuildDirectory)/tfe/tf/azfunction"
+                displayName: 'Upload Code to Terraform Workspace'
+              - task: PowerShell@2
+                inputs:
+                  targetType: filePath
+                  filePath: '$(Agent.BuildDirectory)/tfe/scripts/createQueuePlan.ps1'
+                  arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -ConfigVersionID $(ConfigId) -Token $(TFEToken)'
+                displayName: 'Create Queue Plan'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Write-Output "Remove TF Environment variable 'ARM_CLIENT_SECRET'"
+                  Remove-TFEVariable -TFEBaseURL '$(TFEBaseURL)' -Org $(Org) -WorkspaceName $(WorkSpaceName) -Token $secToken -EnvSecrets 'ARM_CLIENT_SECRET'
+                displayName: 'Delete Secrets from TFE'
+              - task: AzureRmWebAppDeployment@4
+                displayName: 'Deploy Azure Functions'
+                inputs:
+                  azureSubscription: 'azure-sub-lab'
+                  appType: functionapp
+                  WebAppName: '$(functionAppName)'
+                  packageForLinux: '$(Agent.BuildDirectory)/function/WebApp.zip'
+- stage: dev_deploy
+  displayName: 'Dev Stage'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
+  jobs:
+    - deployment: dev_deploy
+      variables:
+        - group: az function workspace - dev
+        - group: az function variables - dev
+      displayName: 'Deploy to Dev'
+      pool:
+        vmImage: windows-latest
+        timeoutInMinutes: 120
+      environment: 'dev'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - powershell: |
+                  install-module tfe -repository PSGallery -scope CurrentUser -force
+                displayName: 'Install tfe PowerShell module'
+              - task: PowerShell@2
+                displayName: 'Create TFE Workspace'
+                inputs:
+                  targetType: filePath
+                  filePath: '$(Agent.BuildDirectory)/tfe/scripts/createTFEWorkspace.ps1'
+                  arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -TerraformVersion $(TerraformVersion) -AutoApply $(AutoApply) -AllowDestroyPlan $(AllowDestroyPlan) -Token $(TFEToken)'
+              - powershell: |
+                  $TFVariables = @{
+                  resource_group_name = "$(resourceGroupName)"
+                  location = "$(location)"
+                  storage_account_name = "$(storageAccountName)"
+                  app_service_plan_name = "$(appServicePlanName)"
+                  app_service_plan_sku = "$(appServicePlanSku)"
+                  app_service_plan_size = "$(appServicePlanSize)"
+                  function_app_name = "$(functionAppName)"
+                  }
+                  $EnvVariables = @{
+                  ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+                  ARM_CLIENT_ID = "$(ARM_CLIENT_ID)"
+                  ARM_TENANT_ID = "$(ARM_TENANT_ID)"
+                  }
+                  $EnvSecrets = @{
+                  ARM_CLIENT_SECRET = "$(ARM_CLIENT_SECRET)"
+                  }
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Add-TFEVariable -TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkspaceName $(workspaceName) -Token $secToken -TFVariables $TFVariables -EnvVariables $EnvVariables -EnvSecrets $EnvSecrets
+                displayName: 'Add variables to TFE'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  $Config = New-TFEConfigVersion -TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkspaceName $(workspaceName) -Token $secToken
+                  Write-Output ("##vso[task.setvariable variable=ConfigId]$($Config.id)")
+                displayName: 'Create new configuration version'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Add-TFEContent -TFEBaseURL $(TFEBaseURL) -ConfigVersionID $(ConfigId) -Token $secToken -contentPath "$(Agent.BuildDirectory)/tfe/tf/azfunction"
+                displayName: 'Upload Code to Terraform Workspace'
+              - task: PowerShell@2
+                inputs:
+                  targetType: filePath
+                  filePath: '$(Agent.BuildDirectory)/tfe/scripts/createQueuePlan.ps1'
+                  arguments: '-TFEBaseURL $(TFEBaseURL) -Org $(Org) -WorkSpaceName $(WorkSpaceName) -ConfigVersionID $(ConfigId) -Token $(TFEToken)'
+                displayName: 'Create Queue Plan'
+              - powershell: |
+                  $secToken = new-object securestring
+                  foreach ($char in [char[]]'$(TFEToken)')
+                  { $secToken.AppendChar($char) }
+                  $secToken.MakeReadOnly()
+                  Write-Output "Remove TF Environment variable 'ARM_CLIENT_SECRET'"
+                  Remove-TFEVariable -TFEBaseURL '$(TFEBaseURL)' -Org $(Org) -WorkspaceName $(WorkSpaceName) -Token $secToken -EnvSecrets 'ARM_CLIENT_SECRET'
+                displayName: 'Delete Secrets from TFE'
+              - task: AzureRmWebAppDeployment@4
+                displayName: 'Deploy Azure Functions'
+                inputs:
+                  azureSubscription: 'azure-sub-dev'
+                  appType: functionapp
+                  WebAppName: '$(functionAppName)'
+                  packageForLinux: '$(Agent.BuildDirectory)/function/WebApp.zip'

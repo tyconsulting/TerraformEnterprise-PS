@@ -23,6 +23,11 @@ The following functions are included in this PowerShell module:
 * **Get-TFEPlan**: Get plan for the run (A plan represents the execution plan of a Run in a Terraform workspace.)
 * **Get-TFEPLanLog**: Download the log from a plan
 
+## Folder Structure
+
+* [**tfe**](./tfe): Contains the code for the tfe PowerShell module
+* [**azure-pipelines-example](./azure-pipelines.example): Contains a sample pipeline to deploy an compiled C# Azure Function app end-to-end.
+
 ## Sample Code
 
 ### Common variables
